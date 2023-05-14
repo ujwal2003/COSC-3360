@@ -1,0 +1,58 @@
+===============================================
+//do decompressing and character position storage here
+    vector<string> numbers = getNumbersFromString(currArgs->parseLine);
+    pair<char, int> decodedCharAndFreq;
+    decodedCharAndFreq = getCharacterFromHuffmanCode(currArgs->root, numbers[0], -1);
+
+    //check for the correct turn;
+    currArgs->mutexVars.mutexLock();
+    while(currArgs->mutexVars.getSharedResource() != currArgs->currTurn) {
+        currArgs->mutexVars.conditionWait();
+    }
+    currArgs->mutexVars.mutexUnlock();
+
+    //print out tree information
+    cout << "Symbol: " << decodedCharAndFreq.first << ", Frequency: " << decodedCharAndFreq.second << ", Code: " << numbers[0] << endl;
+
+    for(int i=1; i<numbers.size(); i++) {
+        int pos = stoi(numbers[i]);
+        currArgs->decodedMap[pos] = decodedCharAndFreq.first;
+    }
+
+    //update the turn
+    currArgs->mutexVars.mutexLock();
+    currArgs->mutexVars.setSharedResource(currArgs->mutexVars.getSharedResource() + 1);
+    currArgs->mutexVars.conditionBroadcast();
+    currArgs->mutexVars.mutexUnlock();
+=================================================
+(in compressed for loop)
+
+getline(cin, line);
+        
+ThreadArgs* funcArgs = new ThreadArgs();
+funcArgs->root = huffmanTreeRoot;
+funcArgs->parseLine = line;
+funcArgs->currTurn = i;
+
+pthread_t thread;
+if(pthread_create(&thread, NULL, decompress, (void*)funcArgs)) {
+    cout << "failed to make thread" << endl;
+    return 1;
+}
+
+threads.push_back(thread);
+threadReturnVals.push_back(funcArgs);
+===================================================
+map<int, char> outputMessage;
+for(ThreadArgs* returnVal: threadReturnVals) {
+    for(auto threadMapElm: returnVal->decodedMap) {
+        outputMessage[threadMapElm.first] = threadMapElm.second;
+    }
+    delete returnVal;
+}
+
+cout << "Original message: ";
+for(const auto& elm: outputMessage)
+    cout << elm.second;
+cout << endl;
+===================================================
