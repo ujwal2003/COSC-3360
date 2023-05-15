@@ -1,6 +1,4 @@
 *.exe
 practiceForExam1/
 practiceForExam2/
-!*.cpp
-!*.h
-!Makefile
+!/*.*
